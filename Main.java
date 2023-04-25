@@ -1,194 +1,208 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.regex.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-
-/*
-Andreea Ibanescu
-CSCI 316 | Project 1 Part 1
-PROJ DESC: to design and implement a Lexical Analyzer for a subset of the Pascal Programming Language. Your program should be able to accept as input a file
-containing statements in Pascal and correctly perform a lexical analysis of each statement. code to test the validity of identifiers,  If a string does not match
-any of the categories, you should indicate that as UNKNOWN. The tokens are analyzed by functions and by using REGEX: regular expressions contain a series of characters
-that define a pattern of text to be matched—to make a filter more specialized, or general.
+/*/
+Programmer Andreea Ibanescu
  */
-
 public class Main {
+    // Declare global variables
+    public static ArrayList<String> variables = new ArrayList<>();
+    public static ArrayList<String> functions = new ArrayList<>();
+    public static ArrayList<String> procedures = new ArrayList<>();
+
     public static void main(String[] args) throws FileNotFoundException {
+        // Retrieve the file from a direct path
+        File f = new File("C:\\Users\\andre\\IdeaProjects\\proj316part2\\src\\text");
 
-        //Retrieve the file from a direct path
-        File text = new File("C:\\Users\\andre\\IdeaProjects\\CSCI316part1\\src\\Parse");
-
-        //Check to make sure file is found and selected by the program & continue if found otherwise exception is thrown
-        if (!text.exists()) {
+        // Check to make sure file is found and selected by the program & continue if found otherwise exception is thrown
+        if (!f.exists()) {
             System.out.println("Parse.txt Does Not Exist");
             System.exit(0);
         }
 
-        //Organize the Pacal Text File into string chunks take each line by one to anaylze
-        ArrayList<String> pascal = new ArrayList<>();
+        // Scanner object is created, you can use its various methods to read input from the text string. part of the java.util
+        Scanner scnr = new Scanner(f);
 
-        //Scanner object is created, you can use its various methods to read input from the text string. part of the java.util
-        Scanner scnr = new Scanner(text);
+        // Organize the Pascal Text File into string chunks, take each line one at a time to analyze
+        ArrayList<String> text = new ArrayList<>();
+
 
         //Using Scanner object to go through nextlines easier
         while (scnr.hasNextLine()) {
             String line = scnr.nextLine();
             //Adding it to a arraylist to analyze later
-            pascal.add(line);
-            //System.out.println(line); //test to see what the lines print out
+            text.add(line);
+            //System.out.println(line); WORKS
         }
 
-        //keeping track of all tokens
-        int count=1;
+        //tells us how many lines for code there is in the whole text file
 
-        for (String string : pascal) {
-            //Make the String into Tokens
-            ArrayList<String> tokens = tokenize(string);
-             System.out.println(tokens); //This line was used for testing to see what the tokenize function made into tokens
-            //Go through each token
-            for(String l: tokens){
-                System.out.println(count+" Token: "+ l );
-                count++; //Count the number of token the program analyzed
+        int i=0;
+        int lineCount = text.size();
 
-                //Analyze  the Token's Lexeme
-                if(isReserved_Words(l))
-                    System.out.println("Lexeme: RESERVED WORD");
-                //the next two if statements will be a considered as reserved word but will check bc it may fall under the variable / function / procedure catergory as well
-                if (l.equalsIgnoreCase("VAR") || l.equalsIgnoreCase("var"))
-                    System.out.println("But also a Variables");
-                if (l.equalsIgnoreCase("FUNCTION") || l.equalsIgnoreCase("function") ||l.equalsIgnoreCase("PROCEDURE") || l.equalsIgnoreCase("procedure"))
-                    System.out.println("But also a function/procedure");
-                else if(isString(l))
-                    System.out.println("Lexeme: STRING");
-                else if(isComment(l))
-                    System.out.println("Lexeme: COMMENT");
-                else if(isDigit(l))
-                    System.out.println("Lexeme: IDENTIFIER, digit");
-                else if(isSpecialSymbol(l))
-                    System.out.println("Lexeme: IDENTIFIER, special symbols");
-                else {
-                    if (!isReserved_Words(l)) {
-                        //Split up the string tokens up into chars to futher anaylze
-                        char[] chars = l.toCharArray();
 
-                        //Continue to loop through the char tokens
-                        for (char c : chars) {
-                            System.out.println(count + " Token: " + c);
-                            count++; //Count the number of token the program analyzed
-                            //CAPS or LOWER
-                            if (isLowerCase(c))
-                                System.out.println("Lexeme: IDENTIFIER, lowercase");
-                            else if (isUpperCase(c))
-                                System.out.println("Lexeme: IDENTIFIER, uppercase");
-                                //If there are spaces
-                            else if (Character.isWhitespace(c))
-                                System.out.println("Lexeme: IDENTIFIER, white-space");
-                            else
-                                //Last thing is that we checked all possible lexeme so instead of an error we put unknown
-                                System.out.println("Lexeme: UNKNOWN");
-                        }
-                    }
-                }
-                 }
+        //Pascal usually follows a general syntax format/template
+
+        // Checking the first line to make sure it starts with "program"
+        if (!text.get(0).startsWith("PROGRAM ")) {
+            System.out.println("Syntax Error: The first line must start with 'program'.");
+        }
+        else {
+            System.out.println("Line is valid. Program begins with program name.");
+            //Extra program name
         }
 
-    }
-
-    //Functions breaks down the string line into tokens
-
-    public static ArrayList<String> tokenize(String s) {
-            //The function will store the tokens into an arraylist called lexeme
-            ArrayList<String> lexeme = new ArrayList<>();
+        //Now the next Lines could be anything, so there will be futher anaylsis of the syntax by breaking the text lines down into chunks while ignoring comments
 
 
-
-            //Using regex to put ALL the ways to seperate a token by either  comments  (* or " or special characters & also the following
-            // \\w+: matches one or more word characters (letters, digits, or underscores)
-            //\\d+: matches one or more digits
-            Pattern pattern = Pattern.compile("(\\s+|\".*?\"|\\(.*?\\)|\\[.*?\\]|\\{.*?\\}|\\+\\+|--|:=|\\*\\*|==|!=|<=|>=|<>|<|>|\\+|-|\\*|/|\\.|,|;|\\(|\\)|\\[|\\]|`|:|=|\\w+|\\d+)");
-            //Using regex class .matcher to see if there is a symbol found within s, if not there's a blank space and its ignored
-            Matcher match = pattern.matcher(s);
-
-
-            //if there's a match continue to anaylze the string
-            while (match.find()) {
-                //get the entire regular expression pattern in the Matcher object match
-                String token = match.group(0);
+        while(i < lineCount){
+            //First ignore comments or blank lines!
+            if (text.get(i).equals("\n") || isComment(text.get(i))) {
+                System.out.println("Valid Line. Blank line or Comment.");
+                i++;
+            }
 
 
-                //FIRST, handle white spaces! ( ^\\s+$ is regex for whitespace) ignoring them from the string
-                if (!token.matches("^\\s+$")) {
 
-
-                    //SECOND handle COMMENTS
-                    if (token.startsWith("(*") && token.endsWith("*)")) {
-                        lexeme.add(token);
-
-
-                        //Third handle QUOTES
-                    } else if (token.contains("\"") && token.endsWith("\""))  {
-                        //split the part of the string that starts with quotes and ends with quotes
-                        String[] quoteTokens = token.split("\"[^\"]*\"");
-
-                        //Now it will iterate over each quoteToken to only add it to lexemes if its not empty and make sure the whole quote is added even if there's white spaces inbetween
-                        for (String quoteToken : quoteTokens) {
-                            if (!quoteToken.isEmpty()) {
-                                lexeme.add(quoteToken);
-                            }
-                        }
-
-                        //LASTLY HANDLE SPECIAL SYMBOLS
-                    } else {
-
-                        //If there are no quotes or comments, white-spaces then we have to check for special characters
-                        Pattern symbolPattern = Pattern.compile(":=|\\+\\+|--|\\*\\*|==|!=|<=|>=|<>|[-+*/=.,;()\\[\\]{}`]|:|=");
-                        //Just as before if there's a special symbol use it to futher analyze
-                        Matcher symbolMatcher = symbolPattern.matcher(token);
-
-
-                        int start = 0; //start is used with the symbolMatcher.start() and symbolMatcher.end() methods to extract substrings of token that are separated by symbols of regex
-
-                        //if there is a special symbol keep going through the string
-                        while (symbolMatcher.find()) {
-
-                            //Get the substring of the index where it starts to the pattern ending
-                            String beforeSymbol = token.substring(start, symbolMatcher.start());
-
-                            //the method to add each substring of token that comes before each symbol as a separate element to the lexeme list
-                            if (!beforeSymbol.isEmpty()) {
-                                lexeme.add(beforeSymbol);
-                            }
-                            //add the actual symnbol to its own token
-                            lexeme.add(symbolMatcher.group(0));  //regex function adds the matched special symbol found, but in this case its just one symbol
-                            start = symbolMatcher.end();
-                        }
-
-                        //making what comes after the symbol into another token
-                        String afterSymbols = token.substring(start);
-                        if (!afterSymbols.isEmpty()) {
-                            lexeme.add(afterSymbols);
-                        }
-                    }
+            //Next checking for Variable declarations NOTE: it's important
+            if(text.get(i).equals("VAR")){
+                System.out.println("Valid Line. Variable Declaration Format");
+                //keep a loop going until a line doesn't have :
+                i++;
+                //Stop checking for Variable declarations after "Begin" b/c it's not the correct syntax, otherwise keep checking for valid syntax
+                while (!text.get(i).equals("BEGIN")) {
+                    VariableDeclarationChecker(text.get(i));
+                    i++;
                 }
             }
-            //return the tokens
-            return lexeme;
+            // ADD a BEGIN CHECKER HERE
+            if(text.get(i).equals("BEGIN")) {
+                System.out.println("Valid Line. Pascal Formating");
+
+            }
+
+            //After checking for Assignment statements they all contain ":="
+            int target = text.get(i).indexOf(":=");
+            if (target >= 0 ) {
+                AssignmentChecker(text.get(i));
+            }
+            //Checking if statements
+            if(text.get(i).contains("IF") && text.get(i).contains("ELSE")){
+                System.out.println("Valid Line If statement: " + text.get(i));
+                i++;
+            }
+
+            // standard procedures that are used to read input from the user and to write output
+            if(text.get(i).contains("Write") || text.get(i).contains("Read") ){
+                System.out.println("Valid Line Pascal function: " + text.get(i));
+            }
+
+            //Checking for Boolean Expressions
+            if(text.get(i).contains("==")){
+                System.out.println("Valid Line Boolean Statement: " + text.get(i));
+            }
+
+            //Checking Arithmetic Operations
+            if (text.get(i).contains("MOD")){
+                System.out.println("incorrect Pascal arithmetic syntax");
+            }
+
+
+            //Check for some basic syntax
+            syntaxChecker(text.get(i));
+
+
+            //Extra credit Loops For
+            if(text.get(i).contains("for")) {
+                //See function below
+            ForLoopCheck(text.get(i));
+            }
+
+            // While
+            if(text.get(i).contains("while")) {
+                //See function below
+                WhileLoopChecker((text.get(i)));
+            }
+
+
+            if(text.get(i).contains("END.")) {
+                i++;
+            }
+            //Continue anaylzing the text
+            i++;
         }
 
+        //Ending part of Pascal Program
+
+        //Checking if the last line of the program starts with "END."
+        if (!text.get(lineCount-1).startsWith("END. ")) {
+            System.out.println("Syntax Error: The last line must start with END.");
+        }
+        else
+            System.out.println("Valid Line. Program ends with END program.");
 
 
 
-        //Function that checks T/F for specific Pascal words which are called the reserved words
+        //Functions:
+    }
+    //Function to check T/F for is a Pascal comment
+    public static boolean isComment(String s){
+        if ( !s.startsWith("(*")) {
+            return false;
+        }
+        if(!s.endsWith("*)")){
+            return false;
+        }
+        return true;
+    }
+    public static void VariableDeclarationChecker(String line) {
+        //If it doesn't have a ":" it's an automatic incorrect syntax
+        if (line.contains(":")) {
+            String[] parts = line.split("\\s*:\\s*\\s*");
+            String variable = parts[0].trim();
+            String dataType = parts[1].trim();
+
+            //check if it's a valid dataType
+            List<String> dataTypes = new ArrayList<>(Arrays.asList("STRING;", "BOOLEAN;", "INTEGER;", "DOUBLE;"));
+            if (dataTypes.contains(dataType)) {
+                //Add the unique name to a list that would be used later on to check Assignment statement
+                variables.add(variable);
+                System.out.println("Valid declaration for variable: " + variable);
+            }
+            // Otherwise it's an invalid statement
+            else {
+                System.out.println("Invalid declaration for variable");
+            }
+        }
+        else
+            System.out.println("Invalid declaration for variable");
+    }
+    public static void AssignmentChecker(String line){
+        int target = line.indexOf(":=");
+        String variableName = line.substring(0, target).trim();
+
+        //Check if its defined then check if it ends with a semicolon
+        if (!variables.contains(variableName)) {
+            System.out.println("Invalid. Variable " + variableName + " is not defined");
+            return;
+        }
+        else
+            System.out.println("Valid Statement");
+
+
+    }
+    //Function that checks T/F for specific Pascal words which are called the reserved words
     public static boolean isReserved_Words(String s){
         //Reserved Words:
-        List<String> reserved_Word= Arrays.asList("and","array","begin","case","const","div","do","downto","else","end",
-            "file","for","function","goto","if","in","label","mod","nil","not","of","or","packed","procedure","program",
-            "record","repeat","set","then","to","type","until","var","while","with");
+        List<String> reserved_Word= Arrays.asList("and","array","begin","case","const","div","do","downto","else",
+                "file","for","function","goto","if","in","label","mod","nil","not","of","or","packed","procedure","program",
+                "record","repeat","set","then","to","type","until","var","while","with");
 
         String lowercaseS = s.toLowerCase(); // convert input string to lowercase
         String uppercaseS = s.toUpperCase(); // convert input string to uppercase
@@ -202,48 +216,71 @@ public class Main {
         }
 
     }
-    //Function to check T/F for is a Pascal comment
-    public static boolean isComment(String s){
-        if (!s.startsWith("{") && !s.startsWith("(*")) {
-            return false;
-        }
-        if (s.startsWith("(*") && !s.endsWith("*)")) {
-            return false;
-        }
-        return true;
-    }
-    //Function to check T/F if is a Digit
-    public static boolean isDigit(String s) {
-        for (char c : s.toCharArray()) {
-            if (!Character.isDigit(c)) {
-                return false;
+    //Checking for some basics!
+    public static void syntaxChecker(String line) {
+        //if(isComment(line))
+          //  return;
+        if(isReserved_Words(line))
+            return;
+        if (line.contains("(")) {
+            if (!line.contains(")") && !line.contains("*")) {
+                System.out.println("Invalid "+line);
             }
         }
-        return true;
-    }
-    //Function to check T/F if its String (Quote)
-    public static boolean isString(String s) {
-        if (s.startsWith("\"") && s.endsWith("\""))
-            return true;
-        else
-            return false;
+        if (line.contains("\"")) {
+            if (!line.contains("\"")) {
+                System.out.println("Invalid "+line);
+            }
+        }
+        if (line.contains("(*")) {
+            if (!line.contains("*)")) {
+                System.out.println("Invalid "+line);
+            }
+        }
+        if (!line.endsWith(";") && !line.contains("*")) {
+                System.out.println("Invalid "+line);
+        }
 
+
+        //System.out.println(line);
     }
-    //Function to check T/F if string is lowercase
-    public static boolean isLowerCase(char c) {
-        return Character.isLowerCase(c);
+    public static boolean arithmeticCheck(String input){
+        // Define regular expressions for operators and operands
+        String operatorRegex = "[+\\-*/]";
+        String integerRegex = "\\d+";
+        String parenRegex = "[()]";
+
+        // Define regular expression for arithmetic expressions
+        String expressionRegex = "(" + integerRegex + "|" + operatorRegex + "|" + parenRegex + ")+";
+
+        // Check if input string matches the arithmetic expression regex
+        return input.matches(expressionRegex);
     }
 
-    //Function to check T/F if string is uppsercase
-    public static boolean isUpperCase(char c) {
-        return Character.isUpperCase(c);
+
+    //Function to check for FOR loop
+    public static void ForLoopCheck(String line){
+        String pattern = "^for\\s+\\w+\\s+:=[^\\s]+\\s+to\\s+[^\\s]+\\s+do$";
+        //means in regex that the line starts with for XYZ then a := then XYZ then TO then XZY then DO
+        Pattern regex = Pattern.compile(pattern);
+        Matcher matcher = regex.matcher(line);
+        if (matcher.matches()) {
+            System.out.println("Line has correct syntax for Pascal for loop.");
+        } else {
+            System.out.println("Line does not have correct syntax for Pascal for loop.");
+        }
     }
-    //Function to check for special Symbols
-    public static boolean isSpecialSymbol(String str) {
-        String specialSymbols = "+*/:=,.;()[]={}`";
-        for (int i = 0; i < str.length(); i++)
-            if (specialSymbols.indexOf(str.charAt(i)) == -1)
-                return false;
-        return true;
+    //Function to check for While Loop similar to for loop but now following the general structure for pascal while loop
+    public static void WhileLoopChecker(String line){
+        String pattern = "^while\\s+[^\\s]+\\s+<|<=|>|>=|==|!=\\s+[^\\s]+\\s+do$";
+        //
+        Pattern regex = Pattern.compile(pattern);
+        Matcher matcher = regex.matcher(line);
+        if (matcher.matches()) {
+            System.out.println("Line has correct syntax for while loop.");
+        } else {
+            System.out.println("Line does not have correct syntax for while loop.");
+        }
     }
+
 }
