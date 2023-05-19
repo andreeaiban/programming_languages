@@ -1,0 +1,49 @@
+Input: 2 3 1 2 3 4 5 6
+Row: 2 Col: 3
+Row-major order:
+1 2 3 4 5 6 Column-major order:
+1 3 5 
+2 4 6 
+
+
+Input: 5 4 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+Row: 5 Col: 4
+Row-major order:
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 Column-major order:
+1 6 11 16 
+2 7 12 17 
+3 8 13 18 
+4 9 14 19 
+5 10 15 20 
+
+
+Input: 4 4 1 2 3 4 5 6 7 8
+Row: 4 Col: 4
+Error: Insufficient elements in the line
+
+Input: 1 7 1 2 3 4 5 6 7
+Row: 1 Col: 7
+Row-major order:
+1 2 3 4 5 6 7 Column-major order:
+1 2 3 4 5 6 7 
+
+
+Input: 5 1 1 2 3 4 5
+Row: 5 Col: 1
+Row-major order:
+1 2 3 4 5 Column-major order:
+1 
+2 
+3 
+4 
+5 
+
+
+Input: 2 2 1 2 3 4
+Row: 2 Col: 2
+Row-major order:
+1 2 3 4 Column-major order:
+1 3 
+2 4 
+
+
